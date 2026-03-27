@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { MultiplayerGameState, MyTeam } from "@/lib/multiplayerTypes";
 import type { HandEntry } from "@/lib/types";
@@ -23,6 +23,7 @@ type Phase =
 
 interface MultiplayerGameProps {
   onBack: () => void;
+  initialJoinCode?: string;
 }
 
 const SUITS = ["♠", "♥", "♦", "♣"];
@@ -125,10 +126,10 @@ function SuitWatermarks() {
   );
 }
 
-export function MultiplayerGame({ onBack }: MultiplayerGameProps) {
-  const [phase, setPhase] = useState<Phase>("lobby");
+export function MultiplayerGame({ onBack, initialJoinCode }: MultiplayerGameProps) {
+  const [phase, setPhase] = useState<Phase>(initialJoinCode ? "join_form" : "lobby");
   const [roomCode, setRoomCode] = useState("");
-  const [roomCodeInput, setRoomCodeInput] = useState("");
+  const [roomCodeInput, setRoomCodeInput] = useState(initialJoinCode ?? "");
   const [myTeam, setMyTeam] = useState<MyTeam>(0);
   const [gameState, setGameState] = useState<MultiplayerGameState | null>(null);
   const [myEntry, setMyEntry] = useState<HandEntry>(freshEntry());
@@ -139,6 +140,8 @@ export function MultiplayerGame({ onBack }: MultiplayerGameProps) {
   const [team2Name, setTeam2Name] = useState("Team 2");
   const [targetScore] = useState(5000);
   const [submitting, setSubmitting] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const joinInputRef = useRef<HTMLInputElement>(null);
 
   // Subscribe to realtime updates while playing
   useEffect(() => {
@@ -168,6 +171,13 @@ export function MultiplayerGame({ onBack }: MultiplayerGameProps) {
       if (supabase) supabase.removeChannel(channel);
     };
   }, [roomCode, phase]);
+
+  // Auto-focus the join input when entering join_form (including on initial mount from URL)
+  useEffect(() => {
+    if (phase === "join_form" && joinInputRef.current) {
+      joinInputRef.current.focus();
+    }
+  }, [phase]);
 
   // Reset entry form when a new hand starts (hands.length increases)
   const handCount = gameState?.hands.length ?? 0;
@@ -305,6 +315,26 @@ export function MultiplayerGame({ onBack }: MultiplayerGameProps) {
       await supabase.from("canasta_games").delete().eq("room_code", roomCode);
     }
     onBack();
+  };
+
+  const handleShareInvite = async () => {
+    const inviteUrl = `https://canasta-scorer.vercel.app?join=${roomCode}`;
+    const shareText = `Join my canasta game! Use code ${roomCode} or click: ${inviteUrl}`;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ text: shareText });
+      } catch {
+        // User cancelled — silently ignore
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(inviteUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        // Clipboard unavailable — silently ignore
+      }
+    }
   };
 
   // ── Not configured ──────────────────────────────────────────────────────────
@@ -539,6 +569,25 @@ export function MultiplayerGame({ onBack }: MultiplayerGameProps) {
             <p className="text-sm" style={{ color: "#6B7280" }}>
               Tell the other team to enter this code
             </p>
+            <button
+              type="button"
+              onClick={handleShareInvite}
+              className="w-full h-12 rounded-xl text-white text-sm font-bold tracking-tight transition-all btn-tactile"
+              style={{
+                background: copied
+                  ? "#16a34a"
+                  : "#6366F1",
+                boxShadow: copied
+                  ? "0 4px 12px rgba(22,163,74,0.3)"
+                  : "0 4px 12px rgba(99,102,241,0.25)",
+              }}
+            >
+              {copied
+                ? "✅ Copied!"
+                : typeof navigator !== "undefined" && typeof navigator.share === "function"
+                  ? "📱 Text invite"
+                  : "📋 Copy invite link"}
+            </button>
           </div>
 
           {/* Team picker */}
@@ -597,6 +646,7 @@ export function MultiplayerGame({ onBack }: MultiplayerGameProps) {
                 Enter Room Code
               </label>
               <input
+                ref={joinInputRef}
                 id="room-code-input"
                 type="text"
                 value={roomCodeInput}

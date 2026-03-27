@@ -129,9 +129,22 @@ export default function Home() {
   const [entries, setEntries] = useState<[HandEntry, HandEntry]>(freshEntries());
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingNewGame, setPendingNewGame] = useState(false);
+  const [initialJoinCode, setInitialJoinCode] = useState<string | undefined>(undefined);
 
-  // Load persisted state on mount
+  // Load persisted state on mount; check for ?join= invite link
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const joinParam = params.get("join");
+    if (joinParam) {
+      const code = joinParam.toUpperCase().slice(0, 4);
+      setInitialJoinCode(code);
+      setAppMode("multi");
+      // Clean the URL so refreshing doesn't re-trigger the join flow
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete("join");
+      window.history.replaceState({}, "", cleanUrl.toString());
+      return;
+    }
     const saved = loadGameState();
     if (saved) {
       setGame(saved);
@@ -240,7 +253,7 @@ export default function Home() {
 
   // ── Multiplayer ──────────────────────────────────────────────────────────────
   if (appMode === "multi") {
-    return <MultiplayerGame onBack={() => setAppMode("menu")} />;
+    return <MultiplayerGame onBack={() => setAppMode("menu")} initialJoinCode={initialJoinCode} />;
   }
 
   // ── Single device ────────────────────────────────────────────────────────────
