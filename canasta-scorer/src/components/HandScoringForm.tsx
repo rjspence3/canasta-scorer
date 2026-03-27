@@ -114,31 +114,25 @@ export function HandScoringForm({
       <div>
         <SectionHeader icon="✨" title="Canastas" color="#D97706" />
         <div className="space-y-3">
-          {/* Natural */}
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background: "rgba(245,158,11,0.06)",
-              border: "1px solid rgba(245,158,11,0.2)",
-            }}
-          >
+          {/* Natural — gold shimmer */}
+          <div className="natural-canasta-card rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <span
-                    className="w-2 h-2 rounded-full"
-                    style={{ background: "#F59E0B" }}
-                  />
-                  <span className="text-sm font-semibold" style={{ color: "#92400E" }}>
+                  <span className="text-base leading-none">♛</span>
+                  <span className="text-sm font-bold" style={{ color: "#78350F" }}>
                     Natural
                   </span>
                   <span
                     className="text-xs font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: "rgba(245,158,11,0.15)", color: "#B45309" }}
+                    style={{ background: "rgba(245,158,11,0.22)", color: "#92400E" }}
                   >
                     +500 each
                   </span>
                 </div>
+                <p className="text-xs mt-0.5 pl-6" style={{ color: "#B45309" }}>
+                  No wild cards
+                </p>
               </div>
               <Stepper
                 value={entry.naturalCanastas}
@@ -149,31 +143,25 @@ export function HandScoringForm({
             </div>
           </div>
 
-          {/* Mixed */}
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background: "rgba(100,116,139,0.06)",
-              border: "1px solid rgba(100,116,139,0.2)",
-            }}
-          >
+          {/* Mixed — silver */}
+          <div className="mixed-canasta-card rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <span
-                    className="w-2 h-2 rounded-full"
-                    style={{ background: "#94A3B8" }}
-                  />
-                  <span className="text-sm font-semibold" style={{ color: "#475569" }}>
+                  <span className="text-base leading-none" style={{ color: "#64748B" }}>◆</span>
+                  <span className="text-sm font-semibold" style={{ color: "#334155" }}>
                     Mixed
                   </span>
                   <span
                     className="text-xs font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: "rgba(100,116,139,0.12)", color: "#64748B" }}
+                    style={{ background: "rgba(100,116,139,0.15)", color: "#475569" }}
                   >
                     +300 each
                   </span>
                 </div>
+                <p className="text-xs mt-0.5 pl-6" style={{ color: "#64748B" }}>
+                  With wild cards
+                </p>
               </div>
               <Stepper
                 value={entry.mixedCanastas}
@@ -193,14 +181,8 @@ export function HandScoringForm({
 
       {/* SECTION 3: Special Bonuses — Red 3s */}
       <div>
-        <SectionHeader icon="🔴" title="Red Threes" color="#DC2626" />
-        <div
-          className="rounded-xl p-4 space-y-3"
-          style={{
-            background: "rgba(220,38,38,0.05)",
-            border: "1px solid rgba(220,38,38,0.15)",
-          }}
-        >
+        <SectionHeader icon="🃏" title="Red Threes" color="#DC2626" />
+        <div className="red-three-card rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div>
               <span className="text-sm font-semibold" style={{ color: "#991B1B" }}>

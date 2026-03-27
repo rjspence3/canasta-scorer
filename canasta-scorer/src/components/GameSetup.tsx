@@ -29,26 +29,30 @@ export function GameSetup({ onStart }: GameSetupProps) {
     >
       {/* Felt-green header */}
       <div
-        className="relative flex flex-col items-center justify-center pt-14 pb-10 px-6 overflow-hidden"
-        style={{
-          background: "linear-gradient(160deg, #14532d 0%, #166534 60%, #15803d 100%)",
-        }}
+        className="felt-header relative flex flex-col items-center justify-center pt-14 pb-10 px-6 overflow-hidden"
       >
-        {/* Floating suit watermarks */}
-        {SUITS.map((suit, i) => (
-          <span
-            key={i}
-            className="absolute suit-watermark text-white select-none pointer-events-none"
-            style={{
-              fontSize: "5rem",
-              top: i < 2 ? "8%" : "55%",
-              left: i % 2 === 0 ? "4%" : "78%",
-              transform: `rotate(${[-12, 15, 20, -18][i]}deg)`,
-            }}
-          >
-            {suit}
-          </span>
-        ))}
+        {/* Floating suit watermarks — red suits use red tint */}
+        {SUITS.map((suit, i) => {
+          const isRed = suit === "♥" || suit === "♦";
+          return (
+            <span
+              key={i}
+              className="absolute select-none pointer-events-none font-black"
+              style={{
+                fontSize: "5rem",
+                top: i < 2 ? "8%" : "55%",
+                left: i % 2 === 0 ? "4%" : "78%",
+                transform: `rotate(${[-12, 15, 20, -18][i]}deg)`,
+                color: isRed ? "#ef4444" : "white",
+                opacity: isRed ? 0.08 : 0.055,
+                lineHeight: 1,
+                userSelect: "none",
+              }}
+            >
+              {suit}
+            </span>
+          );
+        })}
 
         {/* Card stack icon */}
         <div className="relative mb-4">
@@ -68,7 +72,7 @@ export function GameSetup({ onStart }: GameSetupProps) {
               boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
             }}
           >
-            <span className="text-4xl" style={{ color: "#dc2626" }}>
+            <span className="text-4xl font-black" style={{ color: "#111827" }}>
               ♠
             </span>
           </div>
