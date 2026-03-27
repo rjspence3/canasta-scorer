@@ -1,3 +1,5 @@
+import { HouseRules, DEFAULT_HOUSE_RULES } from "./houseRules";
+
 export type GameView = "setup" | "game" | "gameover";
 export type GoingOut = "none" | "normal" | "concealed";
 
@@ -22,6 +24,7 @@ export interface GameState {
   view: GameView;
   teamNames: [string, string];
   targetScore: number;
+  houseRules: HouseRules;
   cumulativeScores: [number, number];
   hands: HandResult[];
 }
@@ -34,4 +37,13 @@ export const DEFAULT_HAND_ENTRY: HandEntry = {
   hasNoMelds: false,
   goingOut: "none",
   unmeledPoints: 0,
+};
+
+export const INITIAL_GAME_STATE: GameState = {
+  view: "setup",
+  teamNames: ["Team 1", "Team 2"],
+  targetScore: DEFAULT_HOUSE_RULES.targetScore,
+  houseRules: DEFAULT_HOUSE_RULES,
+  cumulativeScores: [0, 0],
+  hands: [],
 };

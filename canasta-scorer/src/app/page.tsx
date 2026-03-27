@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { GameState, HandEntry, HandResult, DEFAULT_HAND_ENTRY } from "@/lib/types";
+import { GameState, HandEntry, HandResult, DEFAULT_HAND_ENTRY, INITIAL_GAME_STATE } from "@/lib/types";
+import { HouseRules } from "@/lib/houseRules";
 import { calculateHandScore } from "@/lib/scoring";
 import { saveGameState, loadGameState, clearGameState } from "@/lib/storage";
 import { GameSetup } from "@/components/GameSetup";
@@ -12,14 +13,6 @@ import { WinCelebration } from "@/components/WinCelebration";
 import { MultiplayerGame } from "@/components/MultiplayerGame";
 
 type AppMode = "menu" | "single" | "multi";
-
-const INITIAL_STATE: GameState = {
-  view: "setup",
-  teamNames: ["Team 1", "Team 2"],
-  targetScore: 5000,
-  cumulativeScores: [0, 0],
-  hands: [],
-};
 
 function freshEntries(): [HandEntry, HandEntry] {
   return [{ ...DEFAULT_HAND_ENTRY }, { ...DEFAULT_HAND_ENTRY }];
@@ -125,7 +118,7 @@ function ModeSelect({ onSingle, onMulti }: { onSingle: () => void; onMulti: () =
 
 export default function Home() {
   const [appMode, setAppMode] = useState<AppMode>("menu");
-  const [game, setGame] = useState<GameState>(INITIAL_STATE);
+  const [game, setGame] = useState<GameState>(INITIAL_GAME_STATE);
   const [entries, setEntries] = useState<[HandEntry, HandEntry]>(freshEntries());
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingNewGame, setPendingNewGame] = useState(false);
@@ -160,11 +153,12 @@ export default function Home() {
     saveGameState(state);
   }, []);
 
-  const handleStart = (teamNames: [string, string], targetScore: number) => {
+  const handleStart = (teamNames: [string, string], houseRules: HouseRules) => {
     const newGame: GameState = {
       view: "game",
       teamNames,
-      targetScore,
+      targetScore: houseRules.targetScore,
+      houseRules,
       cumulativeScores: [0, 0],
       hands: [],
     };
@@ -185,9 +179,10 @@ export default function Home() {
   };
 
   const handleSubmitHand = () => {
+    const rules = game.houseRules;
     const handScores: [number, number] = [
-      calculateHandScore(entries[0]),
-      calculateHandScore(entries[1]),
+      calculateHandScore(entries[0], rules),
+      calculateHandScore(entries[1], rules),
     ];
     const newCumulative: [number, number] = [
       game.cumulativeScores[0] + handScores[0],
@@ -235,7 +230,7 @@ export default function Home() {
   const handleNewGame = () => {
     clearGameState();
     setEntries(freshEntries());
-    setGame(INITIAL_STATE);
+    setGame(INITIAL_GAME_STATE);
     setPendingNewGame(false);
     setShowConfirm(false);
     setAppMode("menu");
@@ -277,6 +272,7 @@ export default function Home() {
   const handNumber = game.hands.length + 1;
   const team0WentOut = entries[0].goingOut !== "none";
   const team1WentOut = entries[1].goingOut !== "none";
+  const activeRules = game.houseRules;
 
   return (
     <div className="min-h-screen pb-36" style={{ backgroundColor: "#F8F9FC" }}>
@@ -285,6 +281,7 @@ export default function Home() {
         cumulativeScores={game.cumulativeScores}
         targetScore={game.targetScore}
         handCount={game.hands.length}
+        houseRules={activeRules}
       />
 
       <div className="max-w-lg mx-auto px-4 pt-5 space-y-4">
@@ -309,6 +306,7 @@ export default function Home() {
                 entry={entries[i]}
                 otherTeamWentOut={i === 0 ? team1WentOut : team0WentOut}
                 onChange={(e) => updateEntry(i as 0 | 1, e)}
+                houseRules={activeRules}
               />
             </div>
           ))}
@@ -393,7 +391,7 @@ export default function Home() {
             </div>
             <div className="space-y-2.5">
               {game.teamNames.map((name, i) => {
-                const score = calculateHandScore(entries[i]);
+                const score = calculateHandScore(entries[i], activeRules);
                 const newTotal = game.cumulativeScores[i] + score;
                 const isPos = score >= 0;
                 return (

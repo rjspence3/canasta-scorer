@@ -1,4 +1,5 @@
 import { GameState } from "./types";
+import { DEFAULT_HOUSE_RULES } from "./houseRules";
 
 const STORAGE_KEY = "canasta-game-state";
 
@@ -16,7 +17,12 @@ export function loadGameState(): GameState | null {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) return null;
-    return JSON.parse(saved) as GameState;
+    const parsed = JSON.parse(saved) as GameState;
+    // Backfill houseRules for games saved before this field existed
+    if (!parsed.houseRules) {
+      parsed.houseRules = { ...DEFAULT_HOUSE_RULES, targetScore: parsed.targetScore };
+    }
+    return parsed;
   } catch {
     return null;
   }

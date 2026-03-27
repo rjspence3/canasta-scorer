@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { HouseRules, DEFAULT_HOUSE_RULES } from "@/lib/houseRules";
+import { HouseRulesSetup } from "@/components/HouseRulesSetup";
 
 interface GameSetupProps {
-  onStart: (teamNames: [string, string], targetScore: number) => void;
+  onStart: (teamNames: [string, string], houseRules: HouseRules) => void;
 }
 
 const SUITS = ["♠", "♥", "♦", "♣"];
@@ -14,12 +15,12 @@ const SUITS = ["♠", "♥", "♦", "♣"];
 export function GameSetup({ onStart }: GameSetupProps) {
   const [team1, setTeam1] = useState("Team 1");
   const [team2, setTeam2] = useState("Team 2");
-  const [targetScore, setTargetScore] = useState(5000);
+  const [houseRules, setHouseRules] = useState<HouseRules>(DEFAULT_HOUSE_RULES);
 
   const handleStart = () => {
     const t1 = team1.trim() || "Team 1";
     const t2 = team2.trim() || "Team 2";
-    onStart([t1, t2], targetScore);
+    onStart([t1, t2], houseRules);
   };
 
   return (
@@ -143,52 +144,15 @@ export function GameSetup({ onStart }: GameSetupProps) {
           {/* Divider */}
           <div style={{ borderTop: "1px solid rgba(99,102,241,0.1)" }} />
 
-          {/* Target score */}
+          {/* House Rules */}
           <div>
             <p
               className="text-xs font-medium uppercase tracking-wider mb-3"
               style={{ color: "#6B7280" }}
             >
-              Target Score
+              Game Settings
             </p>
-            <div className="flex gap-2">
-              {[5000, 8500].map((score) => (
-                <button
-                  key={score}
-                  type="button"
-                  onClick={() => setTargetScore(score)}
-                  className="flex-1 h-12 rounded-xl border text-sm font-semibold transition-all btn-tactile"
-                  style={
-                    targetScore === score
-                      ? {
-                          background: "#6366F1",
-                          color: "white",
-                          border: "1px solid #6366F1",
-                          boxShadow: "0 4px 12px rgba(99,102,241,0.3)",
-                        }
-                      : {
-                          background: "white",
-                          color: "#374151",
-                          border: "1px solid rgba(99,102,241,0.2)",
-                        }
-                  }
-                >
-                  {score.toLocaleString()}
-                </button>
-              ))}
-              <Input
-                id="target"
-                type="number"
-                value={targetScore}
-                onChange={(e) =>
-                  setTargetScore(Number(e.target.value) || 5000)
-                }
-                className="w-24 text-base font-semibold h-12 text-center"
-                style={{ borderColor: "rgba(99,102,241,0.2)" }}
-                min={1000}
-                step={500}
-              />
-            </div>
+            <HouseRulesSetup rules={houseRules} onChange={setHouseRules} />
           </div>
 
           {/* Start button */}
@@ -210,7 +174,10 @@ export function GameSetup({ onStart }: GameSetupProps) {
             style={{ color: "#9CA3AF" }}
           >
             <p>Joker 50 · 2 or A 20 · K–8 10 · 7–4 or ♣♠3 5</p>
-            <p>Natural canasta 500 · Mixed canasta 300</p>
+            <p>
+              Natural canasta {houseRules.naturalCanastaBonus} · Mixed canasta{" "}
+              {houseRules.mixedCanastaBonus}
+            </p>
           </div>
         </div>
       </div>

@@ -1,38 +1,43 @@
 import { HandEntry } from "./types";
+import { HouseRules, DEFAULT_HOUSE_RULES } from "./houseRules";
 
-const RED_THREE_BONUS: Record<number, number> = {
-  0: 0,
-  1: 100,
-  2: 200,
-  3: 300,
-  4: 800,
-};
+function getRedThreeValue(count: number, rules: HouseRules): number {
+  if (count === 0) return 0;
+  if (count === 4) return rules.allFourRed3sBonus;
+  return rules.singleRed3Value * count;
+}
 
-export function calculateHandScore(entry: HandEntry): number {
+export function calculateHandScore(
+  entry: HandEntry,
+  rules: HouseRules = DEFAULT_HOUSE_RULES
+): number {
   let score = entry.meldedPoints;
-  score += entry.naturalCanastas * 500;
-  score += entry.mixedCanastas * 300;
+  score += entry.naturalCanastas * rules.naturalCanastaBonus;
+  score += entry.mixedCanastas * rules.mixedCanastaBonus;
 
-  const redThreeValue = RED_THREE_BONUS[entry.redThrees] ?? 0;
+  const redThreeValue = getRedThreeValue(entry.redThrees, rules);
   if (entry.hasNoMelds && entry.redThrees > 0) {
     score -= redThreeValue;
   } else {
     score += redThreeValue;
   }
 
-  if (entry.goingOut === "normal") score += 100;
-  if (entry.goingOut === "concealed") score += 200;
+  if (entry.goingOut === "normal") score += rules.goingOutBonus;
+  if (entry.goingOut === "concealed") score += rules.goingOutConcealedBonus;
 
   score -= entry.unmeledPoints;
 
   return score;
 }
 
-export function getMinimumMeld(cumulativeScore: number): number {
-  if (cumulativeScore < 0) return 15;
-  if (cumulativeScore < 1500) return 50;
-  if (cumulativeScore < 3000) return 90;
-  return 120;
+export function getMinimumMeld(
+  cumulativeScore: number,
+  rules: HouseRules = DEFAULT_HOUSE_RULES
+): number {
+  if (cumulativeScore < 0) return rules.initialMeldScoreNeg;
+  if (cumulativeScore < 1500) return rules.initialMeldScore0to1499;
+  if (cumulativeScore < 3000) return rules.initialMeldScore1500to2999;
+  return rules.initialMeldScore3000plus;
 }
 
 export function formatScore(score: number): string {

@@ -5,11 +5,13 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { MultiplayerGameState, MyTeam } from "@/lib/multiplayerTypes";
 import type { HandEntry } from "@/lib/types";
 import { DEFAULT_HAND_ENTRY } from "@/lib/types";
+import { HouseRules, DEFAULT_HOUSE_RULES, isDefaultRules } from "@/lib/houseRules";
 import { calculateHandScore } from "@/lib/scoring";
 import { HandScoringForm } from "@/components/HandScoringForm";
 import { ScoreBoard } from "@/components/ScoreBoard";
 import { HandHistory } from "@/components/HandHistory";
 import { WinCelebration } from "@/components/WinCelebration";
+import { HouseRulesSetup } from "@/components/HouseRulesSetup";
 import type { HandResult } from "@/lib/types";
 
 type Phase =
@@ -43,11 +45,12 @@ function freshEntry(): HandEntry {
 
 function makeInitialGameState(
   teamNames: [string, string],
-  targetScore: number
+  houseRules: HouseRules
 ): MultiplayerGameState {
   return {
     team_names: teamNames,
-    target_score: targetScore,
+    target_score: houseRules.targetScore,
+    house_rules: houseRules,
     cumulative_scores: [0, 0],
     hands: [],
     current_hand: {
@@ -63,12 +66,14 @@ function makeInitialGameState(
 function processCompletedHand(
   state: MultiplayerGameState
 ): MultiplayerGameState {
-  const { current_hand, cumulative_scores, hands, target_score } = state;
+  const { current_hand, cumulative_scores, hands, target_score, house_rules } = state;
   if (!current_hand.team0_entry || !current_hand.team1_entry) return state;
 
+  const rules = house_rules ?? DEFAULT_HOUSE_RULES;
+
   const handScores: [number, number] = [
-    calculateHandScore(current_hand.team0_entry),
-    calculateHandScore(current_hand.team1_entry),
+    calculateHandScore(current_hand.team0_entry, rules),
+    calculateHandScore(current_hand.team1_entry, rules),
   ];
   const newCumulative: [number, number] = [
     cumulative_scores[0] + handScores[0],
@@ -138,7 +143,7 @@ export function MultiplayerGame({ onBack, initialJoinCode }: MultiplayerGameProp
   const [error, setError] = useState("");
   const [team1Name, setTeam1Name] = useState("Team 1");
   const [team2Name, setTeam2Name] = useState("Team 2");
-  const [targetScore] = useState(5000);
+  const [houseRules, setHouseRules] = useState<HouseRules>(DEFAULT_HOUSE_RULES);
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
   const joinInputRef = useRef<HTMLInputElement>(null);
@@ -205,7 +210,7 @@ export function MultiplayerGame({ onBack, initialJoinCode }: MultiplayerGameProp
       const code = generateRoomCode();
       const state = makeInitialGameState(
         [team1Name.trim() || "Team 1", team2Name.trim() || "Team 2"],
-        targetScore
+        houseRules
       );
       const { error: dbError } = await supabase.from("canasta_games").insert({
         room_code: code,
@@ -522,6 +527,13 @@ export function MultiplayerGame({ onBack, initialJoinCode }: MultiplayerGameProp
               </div>
             </div>
 
+            {/* House Rules */}
+            <div style={{ borderTop: "1px solid rgba(99,102,241,0.1)" }} />
+            <p className="text-xs font-medium uppercase tracking-wider" style={{ color: "#6B7280" }}>
+              Game Settings
+            </p>
+            <HouseRulesSetup rules={houseRules} onChange={setHouseRules} />
+
             {error && (
               <p className="text-sm text-center" style={{ color: "#DC2626" }}>{error}</p>
             )}
@@ -548,6 +560,10 @@ export function MultiplayerGame({ onBack, initialJoinCode }: MultiplayerGameProp
 
   // ── Code Display (creator waits, picks team) ────────────────────────────────
   if (phase === "code_display" && gameState) {
+    const rulesLabel = isDefaultRules(gameState.house_rules ?? DEFAULT_HOUSE_RULES)
+      ? "Standard rules"
+      : "Custom rules";
+
     return (
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F8F9FC" }}>
         <div className="felt-header flex items-center justify-center px-5 pt-12 pb-6">
@@ -569,6 +585,17 @@ export function MultiplayerGame({ onBack, initialJoinCode }: MultiplayerGameProp
             <p className="text-sm" style={{ color: "#6B7280" }}>
               Tell the other team to enter this code
             </p>
+            <div className="flex items-center justify-center gap-1.5">
+              <span
+                className="text-xs font-semibold px-2.5 py-0.5 rounded-full"
+                style={{
+                  background: "rgba(99,102,241,0.1)",
+                  color: "#6366F1",
+                }}
+              >
+                {rulesLabel}
+              </span>
+            </div>
             <button
               type="button"
               onClick={handleShareInvite}
@@ -694,6 +721,10 @@ export function MultiplayerGame({ onBack, initialJoinCode }: MultiplayerGameProp
 
   // ── Team Select (joiner) ────────────────────────────────────────────────────
   if (phase === "team_select" && gameState) {
+    const rulesLabel = isDefaultRules(gameState.house_rules ?? DEFAULT_HOUSE_RULES)
+      ? "Standard rules"
+      : "Custom rules";
+
     return (
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F8F9FC" }}>
         <div className="felt-header flex items-center justify-center px-5 pt-12 pb-6">
@@ -705,9 +736,20 @@ export function MultiplayerGame({ onBack, initialJoinCode }: MultiplayerGameProp
 
         <div className="flex-1 px-5 pt-6 pb-10 max-w-md mx-auto w-full">
           <div className="glass-card p-6 space-y-4">
-            <p className="text-sm font-semibold text-center" style={{ color: "#374151" }}>
-              Which team are you?
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold" style={{ color: "#374151" }}>
+                Which team are you?
+              </p>
+              <span
+                className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                style={{
+                  background: "rgba(99,102,241,0.1)",
+                  color: "#6366F1",
+                }}
+              >
+                {rulesLabel}
+              </span>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               {(gameState.team_names as [string, string]).map((name, i) => (
                 <button
@@ -754,6 +796,7 @@ export function MultiplayerGame({ onBack, initialJoinCode }: MultiplayerGameProp
     const otherTeamWentOut =
       otherEntry !== null && otherEntry.goingOut !== "none";
     const handNumber = gameState.hands.length + 1;
+    const activeRules = gameState.house_rules ?? DEFAULT_HOUSE_RULES;
 
     return (
       <div className="min-h-screen pb-36" style={{ backgroundColor: "#F8F9FC" }}>
@@ -762,6 +805,7 @@ export function MultiplayerGame({ onBack, initialJoinCode }: MultiplayerGameProp
           cumulativeScores={gameState.cumulative_scores}
           targetScore={gameState.target_score}
           handCount={gameState.hands.length}
+          houseRules={activeRules}
         />
 
         <div className="max-w-lg mx-auto px-4 pt-5 space-y-4">
@@ -811,6 +855,7 @@ export function MultiplayerGame({ onBack, initialJoinCode }: MultiplayerGameProp
                 entry={myEntry}
                 otherTeamWentOut={otherTeamWentOut}
                 onChange={setMyEntry}
+                houseRules={activeRules}
               />
             </div>
           )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { HandEntry, GoingOut } from "@/lib/types";
+import { HouseRules, DEFAULT_HOUSE_RULES } from "@/lib/houseRules";
 import { calculateHandScore } from "@/lib/scoring";
 import { Stepper } from "@/components/Stepper";
 
@@ -10,6 +11,7 @@ interface HandScoringFormProps {
   entry: HandEntry;
   otherTeamWentOut: boolean;
   onChange: (entry: HandEntry) => void;
+  houseRules?: HouseRules;
 }
 
 function SectionHeader({
@@ -40,15 +42,22 @@ export function HandScoringForm({
   entry,
   otherTeamWentOut,
   onChange,
+  houseRules = DEFAULT_HOUSE_RULES,
 }: HandScoringFormProps) {
   const update = (patch: Partial<HandEntry>) =>
     onChange({ ...entry, ...patch });
 
-  const handScore = calculateHandScore(entry);
+  const handScore = calculateHandScore(entry, houseRules);
   const isPositive = handScore >= 0;
 
   const canastasValid =
     entry.naturalCanastas + entry.mixedCanastas > 0 || entry.goingOut === "none";
+
+  const red3Label = (() => {
+    const s = houseRules.singleRed3Value;
+    const all4 = houseRules.allFourRed3sBonus;
+    return `1=${s} · 2=${s * 2} · 3=${s * 3} · 4=${all4}`;
+  })();
 
   return (
     <div className="space-y-5">
@@ -127,7 +136,7 @@ export function HandScoringForm({
                     className="text-xs font-bold px-2 py-0.5 rounded-full"
                     style={{ background: "rgba(245,158,11,0.22)", color: "#92400E" }}
                   >
-                    +500 each
+                    +{houseRules.naturalCanastaBonus} each
                   </span>
                 </div>
                 <p className="text-xs mt-0.5 pl-6" style={{ color: "#B45309" }}>
@@ -156,7 +165,7 @@ export function HandScoringForm({
                     className="text-xs font-bold px-2 py-0.5 rounded-full"
                     style={{ background: "rgba(100,116,139,0.15)", color: "#475569" }}
                   >
-                    +300 each
+                    +{houseRules.mixedCanastaBonus} each
                   </span>
                 </div>
                 <p className="text-xs mt-0.5 pl-6" style={{ color: "#64748B" }}>
@@ -189,7 +198,7 @@ export function HandScoringForm({
                 Count
               </span>
               <p className="text-xs mt-0.5" style={{ color: "#DC2626", opacity: 0.7 }}>
-                1=100 · 2=200 · 3=300 · 4=800
+                {red3Label}
               </p>
             </div>
             <Stepper
@@ -242,8 +251,16 @@ export function HandScoringForm({
           {(
             [
               { value: "none", label: "No", sub: "" },
-              { value: "normal", label: "Yes", sub: "+100" },
-              { value: "concealed", label: "Concealed", sub: "+200" },
+              {
+                value: "normal",
+                label: "Yes",
+                sub: `+${houseRules.goingOutBonus}`,
+              },
+              {
+                value: "concealed",
+                label: "Concealed",
+                sub: `+${houseRules.goingOutConcealedBonus}`,
+              },
             ] as { value: GoingOut; label: string; sub: string }[]
           ).map(({ value, label, sub }) => {
             const isSelected = entry.goingOut === value;
@@ -296,7 +313,10 @@ export function HandScoringForm({
                   <span
                     className="text-xs font-bold"
                     style={{
-                      color: isSelected && value === "concealed" ? "rgba(255,255,255,0.85)" : "#F97316",
+                      color:
+                        isSelected && value === "concealed"
+                          ? "rgba(255,255,255,0.85)"
+                          : "#F97316",
                     }}
                   >
                     {sub}
