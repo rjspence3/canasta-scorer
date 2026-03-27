@@ -1,15 +1,15 @@
 {
-  "worker_id": "canasta-share-20260327-173632",
+  "worker_id": "canasta-house-rules-20260327-174638",
   "scores": {
     "task_completion": 5,
-    "output_quality": 5,
+    "output_quality": 4,
     "verification_rigor": 5,
     "cost_efficiency": 5,
     "actionability": 5
   },
-  "total": 25,
-  "summary": "Exceptional execution: the worker delivered all four required features (share button with native API, clipboard fallback, URL auto-fill on join, prominent room code preservation) with clean implementation, comprehensive verification (build, deploy, git push all passing), and immediate production deployment. Cost was lean ($1.30) relative to scope, and the output is immediately actionable with no follow-up needed \u2014 the feature is live and ready to use.",
-  "actual_cost_usd": 1.2956,
-  "graded_at": "2026-03-27T21:42:27.178728+00:00",
+  "total": 24,
+  "summary": "Exceptional execution: worker delivered all 13 house rules with full UI (collapsible setup, in-game modal), updated scoring engine to accept HouseRules param, integrated with Supabase multiplayer state, and deployed live with zero build errors. Verification was comprehensive (build + push + deploy all passing), cost was lean at $2.96 against unknown budget, and output is immediately actionable. Only minor deduction on output_quality: the SUMMARY.md lacks commit-by-commit detail and doesn't explicitly state which files were modified line-by-line, but the substance is complete and correct.",
+  "actual_cost_usd": 2.9642,
+  "graded_at": "2026-03-27T21:59:56.801693+00:00",
   "graded_by": "claude-haiku-4-5-20251001"
 }
