@@ -1,12 +1,15 @@
-# Summary: Canasta scoring app built and pushed to GitHub
+# Summary: Premium visual redesign of Canasta Scorer
 
 ## What was done
-Built a complete mobile-first canasta scoring Next.js 14 app with shadcn/ui and Tailwind CSS. The app handles all scoring rules from the spec (melded points, natural/mixed canasta bonuses, red 3 bonuses and penalties, going out bonuses, unmelded penalties). Pushed to GitHub at rjspence3/canasta-scorer.
+Full UI/UX redesign of all 5 components plus a new WinCelebration screen. Green felt gradient scoreboard with large white scores, indigo-accented glassmorphism cards throughout, chunky 56px tactile Stepper buttons (gold for natural canastas, silver for mixed), grouped HandScoringForm with icon section headers, and a full-screen framer-motion win celebration with animated suit confetti.
 
 ## Key findings / Output
-- **Repo:** https://github.com/rjspence3/canasta-scorer
-- **Build:** 0 ESLint errors, clean `next build` (14.5 kB page, 102 kB first load JS)
-- **Features:** game setup, hand scoring form with steppers, running scoreboard with min-meld reminders, hand history, undo, new game confirmation, localStorage persistence
+- `WinCelebration.tsx` — new component with animated confetti suits, trophy reveal, and win modal
+- `ScoreBoard.tsx` — green felt header, big scores, progress bars, meld tier color badges, gap indicator
+- `Stepper.tsx` — 56px touch targets with gold/silver variants for canasta types
+- `HandScoringForm.tsx` — grouped into Melded Cards / Canastas / Red Threes / Going Out sections
+- `GameSetup.tsx` — card-stack hero, felt gradient, orange CTA button
+- Build: 0 errors, 0 lint warnings · Pushed to rjspence3/canasta-scorer@main
 
 ## Actions needed
-Deploy to Vercel: click "Deploy with Vercel" button in README, or run `npx vercel --prod` from the canasta-scorer directory.
+None — complete. Deploy live at rjspence3/canasta-scorer.

@@ -8,8 +8,7 @@ import { GameSetup } from "@/components/GameSetup";
 import { ScoreBoard } from "@/components/ScoreBoard";
 import { HandScoringForm } from "@/components/HandScoringForm";
 import { HandHistory } from "@/components/HandHistory";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { WinCelebration } from "@/components/WinCelebration";
 
 const INITIAL_STATE: GameState = {
   view: "setup",
@@ -130,73 +129,13 @@ export default function Home() {
   }
 
   if (game.view === "gameover") {
-    const winner =
-      game.cumulativeScores[0] > game.cumulativeScores[1] ? 0 : 1;
-    const tied = game.cumulativeScores[0] === game.cumulativeScores[1];
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <Card className="w-full max-w-sm shadow-md text-center">
-          <CardContent className="pt-8 pb-6 space-y-4">
-            <div className="text-5xl">{tied ? "🤝" : "🏆"}</div>
-            <h2 className="text-2xl font-bold">
-              {tied ? "It&apos;s a Tie!" : `${game.teamNames[winner]} Wins!`}
-            </h2>
-            <div className="space-y-2 mt-4">
-              {game.teamNames.map((name, i) => (
-                <div
-                  key={i}
-                  className={`flex justify-between items-center px-4 py-3 rounded-lg ${
-                    !tied && i === winner
-                      ? "bg-blue-50 border border-blue-200"
-                      : "bg-gray-50"
-                  }`}
-                >
-                  <span className="font-medium">{name}</span>
-                  <span className="text-2xl font-bold tabular-nums">
-                    {game.cumulativeScores[i].toLocaleString()}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="text-sm text-gray-500 mt-2">
-              {game.hands.length} hand{game.hands.length !== 1 ? "s" : ""} played
-            </div>
-            <HandHistory hands={game.hands} teamNames={game.teamNames} />
-            <Button
-              onClick={() => setPendingNewGame(true)}
-              size="lg"
-              className="w-full mt-4"
-            >
-              New Game
-            </Button>
-          </CardContent>
-        </Card>
-
-        {pendingNewGame && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-xs">
-              <CardContent className="pt-6 space-y-4">
-                <p className="text-center font-medium">Start a new game?</p>
-                <p className="text-sm text-gray-500 text-center">
-                  Current game will be cleared.
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setPendingNewGame(false)}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={handleNewGame} className="flex-1">
-                    New Game
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </div>
+      <WinCelebration
+        teamNames={game.teamNames}
+        cumulativeScores={game.cumulativeScores}
+        handCount={game.hands.length}
+        onNewGame={handleNewGame}
+      />
     );
   }
 
@@ -206,7 +145,7 @@ export default function Home() {
   const team1WentOut = entries[1].goingOut !== "none";
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen pb-36" style={{ backgroundColor: "#F8F9FC" }}>
       <ScoreBoard
         teamNames={game.teamNames}
         cumulativeScores={game.cumulativeScores}
@@ -214,25 +153,30 @@ export default function Home() {
         handCount={game.hands.length}
       />
 
-      <div className="max-w-lg mx-auto px-4 pt-4 space-y-4">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-          Hand {handNumber} Entry
-        </h2>
+      <div className="max-w-lg mx-auto px-4 pt-5 space-y-4">
+        {/* Hand number header */}
+        <div className="flex items-center gap-2">
+          <span
+            className="text-xs font-bold uppercase tracking-widest"
+            style={{ color: "#6B7280" }}
+          >
+            Hand {handNumber}
+          </span>
+          <div className="flex-1 h-px" style={{ background: "rgba(99,102,241,0.1)" }} />
+        </div>
 
-        {/* Team cards side by side on wider screens, stacked on mobile */}
+        {/* Team cards stacked on mobile */}
         <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
           {game.teamNames.map((name, i) => (
-            <Card key={i} className="shadow-sm">
-              <CardContent className="pt-5 pb-5">
-                <HandScoringForm
-                  teamName={name}
-                  teamIndex={i as 0 | 1}
-                  entry={entries[i]}
-                  otherTeamWentOut={i === 0 ? team1WentOut : team0WentOut}
-                  onChange={(e) => updateEntry(i as 0 | 1, e)}
-                />
-              </CardContent>
-            </Card>
+            <div key={i} className="glass-card p-5">
+              <HandScoringForm
+                teamName={name}
+                teamIndex={i as 0 | 1}
+                entry={entries[i]}
+                otherTeamWentOut={i === 0 ? team1WentOut : team0WentOut}
+                onChange={(e) => updateEntry(i as 0 | 1, e)}
+              />
+            </div>
           ))}
         </div>
 
@@ -240,83 +184,135 @@ export default function Home() {
       </div>
 
       {/* Sticky bottom actions */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 space-y-2">
-        <div className="max-w-lg mx-auto space-y-2">
-          <Button
+      <div
+        className="fixed bottom-0 left-0 right-0 px-4 pt-3 pb-6"
+        style={{
+          background: "rgba(248,249,252,0.96)",
+          backdropFilter: "blur(12px)",
+          borderTop: "1px solid rgba(99,102,241,0.1)",
+          boxShadow: "0 -4px 24px rgba(0,0,0,0.06)",
+        }}
+      >
+        <div className="max-w-lg mx-auto space-y-2.5">
+          <button
+            type="button"
             onClick={() => setShowConfirm(true)}
-            size="xl"
-            className="w-full font-semibold"
+            className="w-full h-14 rounded-xl text-white text-base font-bold tracking-tight transition-all btn-tactile"
+            style={{
+              background: "linear-gradient(135deg, #F97316 0%, #EA6C10 100%)",
+              boxShadow: "0 4px 16px rgba(249,115,22,0.3)",
+            }}
           >
             Calculate &amp; End Hand
-          </Button>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
+          </button>
+          <div className="flex gap-2.5">
+            <button
+              type="button"
               onClick={handleUndoLastHand}
               disabled={game.hands.length === 0}
-              className="flex-1 text-sm"
+              className="flex-1 h-11 rounded-xl text-sm font-semibold transition-all btn-tactile border"
+              style={{
+                borderColor: "rgba(99,102,241,0.2)",
+                color: game.hands.length === 0 ? "#D1D5DB" : "#6366F1",
+                background: "white",
+              }}
             >
               Undo Last Hand
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
+            </button>
+            <button
+              type="button"
               onClick={() => setPendingNewGame(true)}
-              className="flex-1 text-sm"
+              className="flex-1 h-11 rounded-xl text-sm font-semibold transition-all btn-tactile border"
+              style={{
+                borderColor: "rgba(107,114,128,0.2)",
+                color: "#6B7280",
+                background: "white",
+              }}
             >
               New Game
-            </Button>
+            </button>
           </div>
         </div>
       </div>
 
       {/* Hand summary confirmation */}
       {showConfirm && (
-        <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50">
-          <div className="w-full max-w-lg bg-white rounded-t-2xl p-5 space-y-4">
-            <h3 className="text-lg font-bold text-center">Hand {handNumber} Summary</h3>
-            <div className="space-y-2">
+        <div
+          className="fixed inset-0 flex items-end justify-center z-50"
+          style={{ background: "rgba(0,0,0,0.45)" }}
+        >
+          <div
+            className="w-full max-w-lg rounded-t-2xl p-5 space-y-4"
+            style={{
+              background: "white",
+              boxShadow: "0 -8px 32px rgba(0,0,0,0.15)",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold" style={{ color: "#111827" }}>
+                Hand {handNumber} Summary
+              </h3>
+              <div
+                className="w-1 h-5 rounded-full mx-auto"
+                style={{ background: "rgba(0,0,0,0.1)", width: "40px", height: "4px" }}
+              />
+            </div>
+            <div className="space-y-2.5">
               {game.teamNames.map((name, i) => {
                 const score = calculateHandScore(entries[i]);
                 const newTotal = game.cumulativeScores[i] + score;
+                const isPos = score >= 0;
                 return (
                   <div
                     key={i}
-                    className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                    className="flex justify-between items-center p-4 rounded-xl"
+                    style={{
+                      background: isPos ? "rgba(22,163,74,0.06)" : "rgba(220,38,38,0.05)",
+                      border: `1px solid ${isPos ? "rgba(22,163,74,0.15)" : "rgba(220,38,38,0.12)"}`,
+                    }}
                   >
                     <div>
-                      <div className="font-medium">{name}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="font-semibold" style={{ color: "#111827" }}>
+                        {name}
+                      </div>
+                      <div className="text-xs mt-0.5" style={{ color: "#6B7280" }}>
                         {game.cumulativeScores[i].toLocaleString()} →{" "}
-                        <span className="font-semibold text-gray-700">
+                        <span className="font-bold" style={{ color: "#374151" }}>
                           {newTotal.toLocaleString()}
                         </span>
                       </div>
                     </div>
                     <div
-                      className={`text-xl font-bold tabular-nums ${
-                        score >= 0 ? "text-green-700" : "text-red-600"
-                      }`}
+                      className="text-2xl font-black tabular-nums"
+                      style={{ color: isPos ? "#15803d" : "#dc2626" }}
                     >
-                      {score >= 0 ? "+" : ""}
+                      {isPos ? "+" : ""}
                       {score.toLocaleString()}
                     </div>
                   </div>
                 );
               })}
             </div>
-            <div className="flex gap-2 pt-1">
-              <Button
-                variant="outline"
+            <div className="flex gap-3 pt-1">
+              <button
+                type="button"
                 onClick={() => setShowConfirm(false)}
-                className="flex-1"
+                className="flex-1 h-13 rounded-xl font-semibold border transition-all btn-tactile"
+                style={{ borderColor: "#E5E7EB", color: "#374151" }}
               >
                 Edit
-              </Button>
-              <Button onClick={handleSubmitHand} className="flex-1 font-semibold">
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmitHand}
+                className="flex-1 h-13 rounded-xl font-bold text-white transition-all btn-tactile"
+                style={{
+                  background: "linear-gradient(135deg, #F97316 0%, #EA6C10 100%)",
+                  boxShadow: "0 4px 12px rgba(249,115,22,0.3)",
+                }}
+              >
                 Confirm
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -324,31 +320,39 @@ export default function Home() {
 
       {/* New game confirmation */}
       {pendingNewGame && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-xs">
-            <CardContent className="pt-6 space-y-4">
-              <p className="text-center font-medium">Start a new game?</p>
-              <p className="text-sm text-gray-500 text-center">
-                This will clear all current scores.
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setPendingNewGame(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleNewGame}
-                  className="flex-1"
-                >
-                  Clear &amp; Reset
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <div
+          className="fixed inset-0 flex items-center justify-center p-5 z-50"
+          style={{ background: "rgba(0,0,0,0.45)" }}
+        >
+          <div className="w-full max-w-xs rounded-2xl p-6" style={{ background: "white" }}>
+            <p
+              className="text-center font-bold text-lg mb-1"
+              style={{ color: "#111827" }}
+            >
+              Start a new game?
+            </p>
+            <p className="text-center text-sm mb-5" style={{ color: "#6B7280" }}>
+              This will clear all current scores.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setPendingNewGame(false)}
+                className="flex-1 h-12 rounded-xl font-semibold border transition-all btn-tactile"
+                style={{ borderColor: "#E5E7EB", color: "#374151" }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleNewGame}
+                className="flex-1 h-12 rounded-xl font-semibold text-white transition-all btn-tactile"
+                style={{ background: "#DC2626" }}
+              >
+                Clear &amp; Reset
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
